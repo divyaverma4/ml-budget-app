@@ -1,0 +1,28 @@
+/* global.css — shared variables and resets */
+
+:root {
+  --color-primary: #3d4f3a;
+  --color-primary-dark: #2f3d2d;
+  --color-background: #e8e8e8;
+  --color-surface: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #333333;
+  --color-border: #d4d4d4;
+
+  --radius-sm: 8px;
+  --radius-full: 28px;
+
+  --font-base: system-ui, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-base);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
