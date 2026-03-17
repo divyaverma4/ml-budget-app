@@ -74,7 +74,6 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   )
 }
-
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
