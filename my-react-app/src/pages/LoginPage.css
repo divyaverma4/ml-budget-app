@@ -10,7 +10,6 @@
 /* Card constrained to mobile width */
 .login-card {
   width: 100%;
-  max-width: 390px;
   min-height: 100vh;
   background-color: #e8e8e8;
   padding: 80px 32px 40px;
