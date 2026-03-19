@@ -8,25 +8,34 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { useAuth } from '../context/AuthContext'
-import { login } from '../services/authService'
+import { signup } from '../services/authService'
 
-export default function LoginScreen() {
+export default function SignupScreen() {
   const navigation = useNavigation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
 
-  async function handleLogin() {
+  async function handleSignup() {
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match')
+      return
+    }
+    setLoading(true)
     try {
-      const user = await login(email, password)
+      const user = await signup(email, password)
       signIn(user)
-      navigation.navigate('Starter') 
-      console.log("Login successful")
+      navigation.navigate('Starter')  
     } catch (error) {
-      Alert.alert('Login Failed', error.message)
+      Alert.alert('Signup Failed', error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -35,7 +44,7 @@ export default function LoginScreen() {
       style={styles.wrapper}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Text style={styles.title}>Log-in</Text>
+      <Text style={styles.title}>Sign Up</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Email Address</Text>
@@ -58,34 +67,23 @@ export default function LoginScreen() {
         />
       </View>
 
-      <Text style={styles.forgot}>Forgot Password ?</Text>
-
-      <TouchableOpacity style={styles.btnLogin} onPress={handleLogin}>
-        <Text style={styles.btnLoginText}>Login</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.noAccount}>Don't have an account?</Text>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-        <Text style={styles.link}>Sign Up</Text>
-      </TouchableOpacity>
-
-      <View style={styles.socialRow}>
-         {/* Facebook */}
-        <TouchableOpacity style={styles.socialBtn}>
-          <Text style={[styles.socialIcon, { color: '#1877f2' }]}>f</Text>
-        </TouchableOpacity>
-
-        {/* Google */}
-        <TouchableOpacity style={styles.socialBtn}>
-          <Text style={[styles.socialIcon, { color: '#EA4335' }]}>G</Text>
-        </TouchableOpacity>
-
-        {/* Apple */}
-        <TouchableOpacity style={styles.socialBtn}>
-          <Text style={[styles.socialIcon, { color: '#000' }]}></Text>
-        </TouchableOpacity>
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Confirm Password</Text>
+        <TextInput
+          style={styles.input}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
       </View>
+
+      <TouchableOpacity style={styles.btnSignup} onPress={handleSignup} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnSignupText}>Sign Up</Text>}
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.link}>Already have an account? Log In</Text>
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   )
 }
@@ -121,52 +119,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#1a1a1a',
   },
-  forgot: {
-    fontSize: 12,
-    color: '#333',
-    marginTop: -8,
-    marginBottom: 28,
-  },
-  btnLogin: {
+  
+  btnSignup: {
     backgroundColor: '#3d4f3a',
     borderRadius: 28,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  btnLoginText: {
+  btnSignupText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
   },
-  noAccount: {
-    textAlign: 'center',
-    fontSize: 13,
-    color: '#333',
-    marginTop: 20,
-    marginBottom: 24,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-  },
-  socialBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 1.5,
-    borderColor: '#d0d0d0',
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  socialIcon: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  link: {
-    textAlign: 'center',
-    color: '#007bff',
-    marginTop: 10,
-  },
+ 
+  link: { 
+    textAlign: 'center', 
+    color: '#007bff' 
+},
 })
