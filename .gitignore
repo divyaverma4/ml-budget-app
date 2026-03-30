@@ -1,6 +1,0 @@
-serviceAccountKey.json
-venv/
-__pycache__/
-.env
-*.joblib
-.DS_Store
