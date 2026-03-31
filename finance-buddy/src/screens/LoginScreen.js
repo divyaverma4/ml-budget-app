@@ -23,7 +23,7 @@ export default function LoginScreen() {
     try {
       const user = await login(email, password)
       signIn(user)
-      navigation.navigate('Home') 
+      navigation.navigate('Starter') 
       console.log("Login successful")
     } catch (error) {
       Alert.alert('Login Failed', error.message)

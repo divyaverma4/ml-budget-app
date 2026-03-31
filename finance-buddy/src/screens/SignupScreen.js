@@ -31,8 +31,7 @@ export default function SignupScreen() {
     try {
       const user = await signup(email, password)
       signIn(user)
-      Alert.alert('Signup Successful', 'Navigating you to login')
-      navigation.navigate('Login')
+      navigation.navigate('Starter')  
     } catch (error) {
       Alert.alert('Signup Failed', error.message)
     } finally {
@@ -65,8 +64,6 @@ export default function SignupScreen() {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          placeholder="Password must be at least 6 characters"
-          placeholderTextColor="#999"
         />
       </View>
 
