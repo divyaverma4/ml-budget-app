@@ -27,11 +27,13 @@ export default function SignupScreen() {
       Alert.alert('Error', 'Passwords do not match')
       return
     }
+
     setLoading(true)
     try {
       const user = await signup(email, password)
       signIn(user)
-      navigation.navigate('Starter')  
+      Alert.alert('Signup Successful', 'Navigating you to login')
+      navigation.navigate('Login')
     } catch (error) {
       Alert.alert('Signup Failed', error.message)
     } finally {
@@ -64,6 +66,8 @@ export default function SignupScreen() {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
+          placeholder="Password must be at least 6 characters"
+          placeholderTextColor="#999"
         />
       </View>
 
@@ -77,8 +81,16 @@ export default function SignupScreen() {
         />
       </View>
 
-      <TouchableOpacity style={styles.btnSignup} onPress={handleSignup} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnSignupText}>Sign Up</Text>}
+      <TouchableOpacity
+        style={styles.btnSignup}
+        onPress={handleSignup}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.btnSignupText}>Sign Up</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -119,21 +131,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#1a1a1a',
   },
-  
   btnSignup: {
     backgroundColor: '#3d4f3a',
     borderRadius: 28,
     paddingVertical: 16,
     alignItems: 'center',
+    marginTop: 10,
   },
   btnSignupText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
   },
- 
-  link: { 
-    textAlign: 'center', 
-    color: '#007bff' 
-},
+  link: {
+    textAlign: 'center',
+    color: '#007bff',
+    marginTop: 16,
+  },
 })
