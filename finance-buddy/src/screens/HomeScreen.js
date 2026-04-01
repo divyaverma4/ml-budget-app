@@ -10,12 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import { useData, CATEGORIES, getStatus } from '../context/DataContext'
 import { logout } from '../services/authService'
 
-const TABS = [
-  { name: 'Home', initial: 'H' },
-  { name: 'Expenses', initial: 'E' },
-  { name: 'Budget', initial: 'B' },
-  { name: 'Trends', initial: 'T' },
-]
+
 
 const SUMMARY_CATEGORIES = ['Food', 'Transportation', 'Rent', 'Groceries']
 
@@ -23,7 +18,6 @@ export default function HomeScreen() {
   const navigation = useNavigation()
   const { signOut } = useAuth()
   const { spending, budgetPlan, addExpense } = useData()
-  const [activeTab, setActiveTab] = useState('Home')
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [amount, setAmount] = useState('')
@@ -150,25 +144,6 @@ export default function HomeScreen() {
 
       </ScrollView>
 
-      {/* Tab Bar */}
-      <View style={styles.tabBar}>
-        {TABS.map(({ name, initial }) => (
-          <TouchableOpacity
-            key={name}
-            style={styles.tab}
-            onPress={() => {
-              setActiveTab(name)
-              if (name !== 'Home') navigation.navigate(name)
-            }}
-          >
-            <View style={[styles.tabIconWrap, activeTab === name && styles.tabIconWrapActive]}>
-              <Text style={[styles.tabIcon, activeTab === name && styles.tabIconActive]}>{initial}</Text>
-            </View>
-            <Text style={[styles.tabLabel, activeTab === name && styles.tabLabelActive]}>{name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       {/* Add Expense Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
         <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -248,17 +223,6 @@ const styles = StyleSheet.create({
   progressTrack: { height: 6, backgroundColor: '#eee', borderRadius: 3, overflow: 'hidden' },
   progressFill: { height: 6, borderRadius: 3 },
   summaryAmounts: { fontSize: 12, color: '#888', marginTop: 2 },
-  tabBar: {
-    flexDirection: 'row', backgroundColor: '#e8e8e8',
-    paddingVertical: 10, paddingBottom: 16, paddingHorizontal: 8,
-  },
-  tab: { flex: 1, alignItems: 'center', gap: 3 },
-  tabIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  tabIconWrapActive: { backgroundColor: '#3a6fdf' },
-  tabIcon: { fontSize: 14, fontWeight: '700', color: '#333' },
-  tabIconActive: { color: '#fff' },
-  tabLabel: { fontSize: 11, color: '#555' },
-  tabLabelActive: { color: '#3a6fdf', fontWeight: '600' },
   modalOverlay: { flex: 1, justifyContent: 'flex-end' },
   modalBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.4)' },
   modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 36 },

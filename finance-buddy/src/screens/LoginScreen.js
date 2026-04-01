@@ -69,25 +69,6 @@ export default function LoginScreen() {
         <Text style={styles.link}>Sign Up</Text>
       </TouchableOpacity>
 
-<<<<<<< HEAD
-      {/* <View style={styles.socialRow}>
-         {/* Facebook */}
-        {/* <TouchableOpacity style={styles.socialBtn}>
-          <Text style={[styles.socialIcon, { color: '#1877f2' }]}>f</Text>
-        </TouchableOpacity>
-
-        {/* Google */}
-        {/* <TouchableOpacity style={styles.socialBtn}>
-          <Text style={[styles.socialIcon, { color: '#EA4335' }]}>G</Text>
-        </TouchableOpacity> */}
-
-        {/* Apple */}
-        {/* <TouchableOpacity style={styles.socialBtn}>
-          <Text style={[styles.socialIcon, { color: '#000' }]}></Text>
-        </TouchableOpacity>
-      </View> */} 
-=======
->>>>>>> 4eedda9070128e835e3636d79701b2b498d2f11e
     </KeyboardAvoidingView>
   )
 }

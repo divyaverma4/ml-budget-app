@@ -1,144 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-
-const BudgetScreen = () => {
-  const handleOptimizeBudget = () => {
-    console.log('Optimize budget pressed');
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Budget Management</Text>
-
-      <TouchableOpacity style={styles.optimizeButton} onPress={handleOptimizeBudget}>
-        <Text style={styles.optimizeButtonText}>Optimize My Budget</Text>
-      </TouchableOpacity>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Budget Plan</Text>
-        <View style={styles.categoryRow}>
-          <Text>Food</Text>
-          <Text>$200</Text>
-        </View>
-        <View style={styles.categoryRow}>
-          <Text>Transport</Text>
-          <Text>$100</Text>
-        </View>
-        <View style={styles.categoryRow}>
-          <Text>Entertainment</Text>
-          <Text>$50</Text>
-        </View>
-        <View style={styles.categoryRow}>
-          <Text>Utilities</Text>
-          <Text>$200</Text>
-        </View>
-        <View style={styles.categoryRow}>
-          <Text>Rent</Text>
-          <Text>$1000</Text>
-        </View>
-        <View style={[styles.categoryRow, styles.totalRow]}>
-          <Text style={styles.totalText}>Total Budget</Text>
-          <Text style={styles.totalText}>$1,550</Text>
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Monthly Budget Overview</Text>
-        <Text style={styles.cardText}>Manual Budget adjustment?</Text>
-      </View>
-
-      
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#7d9478',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  optimizeButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  optimizeButtonText: {
-    color: '#7d9478',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  card: {
-    backgroundColor: '#fffad4',
-    padding: 20,
-    borderRadius: 10,
-    marginVertical: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c5f2d',
-    marginBottom: 15,
-  },
-  cardText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 5,
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    paddingTop: 10,
-    marginTop: 10,
-  },
-  totalText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#2c5f2d',
-  },
-
-cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2c5f2d',
-    marginBottom: 10,
-  },
-  cardText: {
-    fontSize: 16,
-    color: '#666',
-    lineHeight: 24,
-  },
-});
-
-export default BudgetScreen;
-=======
 import { useState } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet, Modal,
@@ -193,19 +52,11 @@ function DonutChart({ available, savings, total, cardBg }) {
   )
 }
 
-const TABS = [
-  { name: 'Home', initial: 'H' },
-  { name: 'Expenses', initial: 'E' },
-  { name: 'Budget', initial: 'B' },
-  { name: 'Trends', initial: 'T' },
-]
-
 const BUDGET_CATEGORIES = ['Food', 'Transportation', 'Rent', 'Groceries']
 
 export default function BudgetScreen() {
   const navigation = useNavigation()
   const { spending, totalIncome, totalSavings, budgetPlan, updateBudget, computeBudgetPlan } = useData()
-  const [activeTab, setActiveTab] = useState('Budget')
   const [incomeModal, setIncomeModal] = useState(false)
   const [savingsModal, setSavingsModal] = useState(false)
   const [incomeAmount, setIncomeAmount] = useState('')
@@ -362,25 +213,6 @@ export default function BudgetScreen() {
 
       </ScrollView>
 
-      {/* Tab Bar */}
-      <View style={styles.tabBar}>
-        {TABS.map(({ name, initial }) => (
-          <TouchableOpacity
-            key={name}
-            style={styles.tab}
-            onPress={() => {
-              setActiveTab(name)
-              if (name !== 'Budget') navigation.navigate(name)
-            }}
-          >
-            <View style={[styles.tabIconWrap, activeTab === name && styles.tabIconWrapActive]}>
-              <Text style={[styles.tabIcon, activeTab === name && styles.tabIconActive]}>{initial}</Text>
-            </View>
-            <Text style={[styles.tabLabel, activeTab === name && styles.tabLabelActive]}>{name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       {/* Add Income Modal */}
       <Modal visible={incomeModal} transparent animationType="slide" onRequestClose={() => setIncomeModal(false)}>
         <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -481,17 +313,6 @@ const styles = StyleSheet.create({
   progressTrack: { height: 6, backgroundColor: '#eee', borderRadius: 3, overflow: 'hidden', marginBottom: 3 },
   progressFill: { height: 6, borderRadius: 3 },
   spentLabel: { fontSize: 12, color: '#888' },
-  tabBar: {
-    flexDirection: 'row', backgroundColor: '#e8e8e8',
-    paddingVertical: 10, paddingBottom: 16, paddingHorizontal: 8,
-  },
-  tab: { flex: 1, alignItems: 'center', gap: 3 },
-  tabIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  tabIconWrapActive: { backgroundColor: '#3a6fdf' },
-  tabIcon: { fontSize: 14, fontWeight: '700', color: '#333' },
-  tabIconActive: { color: '#fff' },
-  tabLabel: { fontSize: 11, color: '#555' },
-  tabLabelActive: { color: '#3a6fdf', fontWeight: '600' },
   modalOverlay: { flex: 1, justifyContent: 'flex-end' },
   modalBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.4)' },
   modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 36 },
@@ -507,4 +328,3 @@ const styles = StyleSheet.create({
   confirmBtn: { flex: 1, backgroundColor: '#3d4f3a', borderRadius: 28, paddingVertical: 14, alignItems: 'center' },
   confirmBtnText: { fontSize: 16, color: '#fff', fontWeight: '600' },
 })
->>>>>>> 4eedda9070128e835e3636d79701b2b498d2f11e
