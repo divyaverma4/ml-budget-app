@@ -1,19 +1,28 @@
 import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+<<<<<<< HEAD
 import { AuthProvider, useAuth } from './src/context/AuthContext'
 import { View, TouchableOpacity, Text } from 'react-native'
+=======
+import { AuthProvider } from './src/context/AuthContext'
+import { DataProvider } from './src/context/DataContext'
+>>>>>>> 4eedda9070128e835e3636d79701b2b498d2f11e
 import StarterScreen from './src/screens/StarterScreen'
 import LoginScreen from './src/screens/LoginScreen'
 import SignupScreen from './src/screens/SignupScreen'
 import HomeScreen from './src/screens/HomeScreen'
 import BudgetScreen from './src/screens/BudgetScreen'
+<<<<<<< HEAD
 import SpendingTrendsScreen from './src/screens/SpendingTrendsScreen'
 
+=======
+>>>>>>> 4eedda9070128e835e3636d79701b2b498d2f11e
 
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
+<<<<<<< HEAD
 function CustomTabBar({ state, descriptors, navigation }) {
   return (
     <View style={{
@@ -135,6 +144,28 @@ export default function App() {
   return (
     <AuthProvider>
       <AppContent />
+=======
+function AppScreens() {
+  return (
+    <DataProvider>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Starter" component={StarterScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Budget" component={BudgetScreen} />
+      </Stack.Navigator>
+    </DataProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <AppScreens />
+      </NavigationContainer>
+>>>>>>> 4eedda9070128e835e3636d79701b2b498d2f11e
     </AuthProvider>
   )
 }
