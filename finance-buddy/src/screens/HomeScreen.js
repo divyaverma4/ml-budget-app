@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, TextInput, Alert} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { Picker } from '@react-native-picker/picker'
+import { useState } from 'react'
+
+import {
+  View, Text, TouchableOpacity, StyleSheet, Modal,
+  ScrollView, TextInput, Alert, StatusBar, KeyboardAvoidingView, Platform,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useNavigation } from '@react-navigation/native'
+import { useAuth } from '../context/AuthContext'
+import { useData, CATEGORIES, getStatus } from '../context/DataContext'
+import { logout } from '../services/authService'
 
 const TABS = [
   { name: 'Home', initial: 'H' },
@@ -11,113 +17,140 @@ const TABS = [
   { name: 'Trends', initial: 'T' },
 ]
 
-const HomeScreen = () => {
-  const navigation = useNavigation();
-  const { signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState('Home');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [expenseType, setExpenseType] = useState('');
-  const [amount, setAmount] = useState('');
+const SUMMARY_CATEGORIES = ['Food', 'Transportation', 'Rent', 'Groceries']
 
-  const handleSubmit = () => {
-    if (!expenseType || !amount) {
-      Alert.alert('Error', 'Please select expense type and enter amount');
-      return;
+export default function HomeScreen() {
+  const navigation = useNavigation()
+  const { signOut } = useAuth()
+  const { spending, budgetPlan, addExpense } = useData()
+  const [activeTab, setActiveTab] = useState('Home')
+  const [modalVisible, setModalVisible] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [amount, setAmount] = useState('')
+
+  async function handleLogout() {
+    try {
+      await logout()
+      signOut()
+    } catch (error) {
+      Alert.alert('Logout Failed', error.message)
     }
-    Alert.alert('Success', `Added ${expenseType} expense of $${amount}`);
-    setExpenseType('');
-    setAmount('');
-    setModalVisible(false);
-  };
+  }
 
-  const handleLogout = () => {
-    signOut();
-    navigation.navigate('Starter');
-  };
+  async function handleAddExpense() {
+    if (!selectedCategory) {
+      Alert.alert('Error', 'Please select a category')
+      return
+    }
+    const num = parseFloat(amount)
+    if (!amount || isNaN(num) || num <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount')
+      return
+    }
+    try {
+      await addExpense(selectedCategory, num)
+      setModalVisible(false)
+      setSelectedCategory('')
+      setAmount('')
+    } catch (error) {
+      console.error('Error adding expense:', error)
+      Alert.alert('Error', 'Could not save expense. Please try again.')
+    }
+  }
+
+  function closeModal() {
+    setModalVisible(false)
+    setSelectedCategory('')
+    setAmount('')
+  }
+
+  // Generate insights: categories over 85% of budget
+  const insights = SUMMARY_CATEGORIES
+    .map(cat => {
+      const spent = spending[cat] || 0
+      const budget = budgetPlan[cat] || 0
+      const { label, color } = getStatus(spent, budget)
+      return { cat, spent, budget, label, color }
+    })
+    .filter(item => item.label !== 'On Track' && item.budget > 0)
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.addButtonText}>+ Add Expense</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#3d4f3a" />
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Add New Expense</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerNav}>↺</Text>
+        </View>
+        <Text style={styles.headerTitle}>Home</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>⊕ Logout</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerGear}>⚙</Text>
+        </View>
+      </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Expense Type:</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={expenseType}
-                  onValueChange={(itemValue) => setExpenseType(itemValue)}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Select expense type" value="" />
-                  <Picker.Item label="Food" value="Food" />
-                  <Picker.Item label="Transport" value="Transport" />
-                  <Picker.Item label="Entertainment" value="Entertainment" />
-                  <Picker.Item label="Utilities" value="Utilities" />
-                </Picker>
-              </View>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+
+        {/* Add Expense Card */}
+        <TouchableOpacity style={styles.card} onPress={() => setModalVisible(true)} activeOpacity={0.85}>
+          <View style={styles.addExpenseRow}>
+            <View style={styles.addIcon}>
+              <Text style={styles.addIconText}>+</Text>
             </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Amount ($):</Text>
-              <TextInput
-                style={styles.textInput}
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="0.00"
-                placeholderTextColor="#999"
-              />
-            </View>
-
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-              <Text style={styles.submitButtonText}>Add Expense</Text>
-            </TouchableOpacity>
+            <Text style={styles.addExpenseLabel}>Add expense</Text>
           </View>
-        </View>
-      </Modal>
+        </TouchableOpacity>
 
-      <View style={styles.card}>
-        <Text>This week's insight</Text>
-      </View>
+        {/* This Week's Insight Card */}
+        <View style={[styles.card, styles.cardAlt]}>
+          <Text style={styles.cardTitle}>This Week's Insight:</Text>
+          {insights.length === 0 ? (
+            <Text style={styles.insightDefault}>
+              {Object.keys(spending).length === 0
+                ? 'No expenses recorded this week yet.'
+                : 'You\'re on track with all categories this week!'}
+            </Text>
+          ) : (
+            insights.map(({ cat, spent, budget, label, color }) => (
+              <View key={cat} style={styles.insightRow}>
+                <Text style={styles.insightCat}>{cat}</Text>
+                <Text style={[styles.insightLabel, { color }]}>
+                  ${spent.toFixed(0)} / ${budget} — {label}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
 
-      <View style={styles.card}>
-        <Text>Budget Summary</Text>
-        <View style={styles.categoryRow}>
-          <Text>Food</Text>
-          <Text>On Budget</Text>
+        {/* Budget Summary Card */}
+        <View style={[styles.card, styles.cardAlt]}>
+          <Text style={styles.cardTitle}>Budget Summary:</Text>
+          {SUMMARY_CATEGORIES.map(cat => {
+            const spent = spending[cat] || 0
+            const budget = budgetPlan[cat] || 0
+            const { label, color } = getStatus(spent, budget)
+            const progress = budget > 0 ? Math.min(spent / budget, 1) : 0
+            return (
+              <View key={cat} style={styles.summaryItem}>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryCategory}>{cat}</Text>
+                  <Text style={[styles.summaryStatus, { color }]}>{label}</Text>
+                </View>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: color }]} />
+                </View>
+                <Text style={styles.summaryAmounts}>${spent.toFixed(0)} of ${budget}</Text>
+              </View>
+            )
+          })}
         </View>
-        <View style={styles.categoryRow}>
-          <Text>Transport</Text>
-          <Text>Overspent</Text>
-        </View>
-        <View style={styles.categoryRow}>
-          <Text>Entertainment</Text>
-          <Text>On Budget</Text>
-        </View>
-        <View style={styles.categoryRow}>
-          <Text>Utilities</Text>
-          <Text>Overspent</Text>
-        </View>
-      </View>
 
-      {/* Bottom Tab Bar */}
+      </ScrollView>
+
+      {/* Tab Bar */}
       <View style={styles.tabBar}>
         {TABS.map(({ name, initial }) => (
           <TouchableOpacity
@@ -135,182 +168,114 @@ const HomeScreen = () => {
           </TouchableOpacity>
         ))}
       </View>
-    </View>
-  );
-};
+
+      {/* Add Expense Modal */}
+      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
+        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={closeModal} />
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Add Expense</Text>
+            <Text style={styles.modalLabel}>Category</Text>
+            <View style={styles.chipGrid}>
+              {CATEGORIES.map(cat => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[styles.chip, selectedCategory === cat && styles.chipSelected]}
+                  onPress={() => setSelectedCategory(cat)}
+                >
+                  <Text style={[styles.chipText, selectedCategory === cat && styles.chipTextSelected]}>{cat}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.modalLabel}>Amount ($)</Text>
+            <TextInput
+              style={styles.amountInput}
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              placeholderTextColor="#aaa"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={closeModal}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.confirmBtn} onPress={handleAddExpense}>
+                <Text style={styles.confirmBtnText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    </SafeAreaView>
+  )
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#7d9478',
+  safeArea: { flex: 1, backgroundColor: '#7d9478' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#3d4f3a', paddingHorizontal: 14, paddingVertical: 12,
   },
-  logoutButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    backgroundColor: '#fff',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  logoutButtonText: {
-    color: '#7d9478',
-    fontWeight: 'bold',
-  },
-  addButton: {
-    backgroundColor: '#d6ebd1',
-    padding: 15,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginBottom: 20,    marginTop: 70,    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  addButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#fffad4',
-    padding: 25,
-    borderRadius: 20,
-    width: '85%',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  closeButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 10,
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: '#666',
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c5f2d',
-    marginBottom: 20,
-  },
-  inputGroup: {
-    width: '100%',
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
-  },
-  pickerContainer: {
-    borderWidth: 2,
-    borderColor: '#ddd',
-    borderRadius: 50,
-    backgroundColor: '#f9f9f9',
-  },
-  picker: {
-    height: 50,
-    width: '100%',
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    width: '100%',
-    backgroundColor: '#f9f9f9',
-  },
-  submitButton: {
-    backgroundColor: '#518253',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  headerLeft: { minWidth: 40 },
+  headerNav: { color: '#fff', fontSize: 16 },
+  headerTitle: { fontSize: 20, fontWeight: '600', color: '#fff', flex: 1, textAlign: 'center' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 80, justifyContent: 'flex-end' },
+  logoutBtn: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 },
+  logoutText: { color: '#fff', fontSize: 13, fontWeight: '500' },
+  headerGear: { color: '#fff', fontSize: 18 },
+  scroll: { flex: 1 },
+  scrollContent: { padding: 16, gap: 14 },
   card: {
-    backgroundColor: '#fffad4',
-    padding: 15,
-    marginVertical: 10,
-    borderRadius: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: '#fff', borderRadius: 18, padding: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 5,
-  },
+  cardAlt: { backgroundColor: '#FFF5E0' },
+  cardTitle: { fontSize: 19, fontWeight: '700', color: '#1a1a1a', marginBottom: 12 },
+  addExpenseRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 4 },
+  addIcon: { width: 36, height: 36, borderRadius: 8, borderWidth: 2, borderColor: '#1a1a1a', alignItems: 'center', justifyContent: 'center' },
+  addIconText: { fontSize: 22, fontWeight: '300', color: '#1a1a1a', lineHeight: 26 },
+  addExpenseLabel: { fontSize: 18, fontWeight: '500', color: '#1a1a1a' },
+  insightDefault: { fontSize: 15, color: '#555' },
+  insightRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  insightCat: { fontSize: 15, fontWeight: '500', color: '#1a1a1a' },
+  insightLabel: { fontSize: 14, fontWeight: '500' },
+  summaryItem: { marginBottom: 12 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  summaryCategory: { fontSize: 16, color: '#1a1a1a' },
+  summaryStatus: { fontSize: 15, fontWeight: '600' },
+  progressTrack: { height: 6, backgroundColor: '#eee', borderRadius: 3, overflow: 'hidden' },
+  progressFill: { height: 6, borderRadius: 3 },
+  summaryAmounts: { fontSize: 12, color: '#888', marginTop: 2 },
   tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#e8e8e8',
-    paddingVertical: 10,
-    paddingBottom: 16,
-    paddingHorizontal: 8,
+    flexDirection: 'row', backgroundColor: '#e8e8e8',
+    paddingVertical: 10, paddingBottom: 16, paddingHorizontal: 8,
   },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 3,
+  tab: { flex: 1, alignItems: 'center', gap: 3 },
+  tabIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  tabIconWrapActive: { backgroundColor: '#3a6fdf' },
+  tabIcon: { fontSize: 14, fontWeight: '700', color: '#333' },
+  tabIconActive: { color: '#fff' },
+  tabLabel: { fontSize: 11, color: '#555' },
+  tabLabelActive: { color: '#3a6fdf', fontWeight: '600' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  modalBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 36 },
+  modalTitle: { fontSize: 22, fontWeight: '700', color: '#1a1a1a', marginBottom: 20, textAlign: 'center' },
+  modalLabel: { fontSize: 15, fontWeight: '600', color: '#333', marginBottom: 10, marginTop: 4 },
+  chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  chip: { borderWidth: 1.5, borderColor: '#ccc', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7 },
+  chipSelected: { backgroundColor: '#3d4f3a', borderColor: '#3d4f3a' },
+  chipText: { fontSize: 14, color: '#333' },
+  chipTextSelected: { color: '#fff', fontWeight: '600' },
+  amountInput: {
+    borderWidth: 1.5, borderColor: '#d4d4d4', borderRadius: 10,
+    padding: 14, fontSize: 18, color: '#1a1a1a', marginBottom: 24, backgroundColor: '#fafafa',
   },
-  tabIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabIconWrapActive: {
-    backgroundColor: '#3a6fdf',
-  },
-  tabIcon: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#333',
-  },
-  tabIconActive: {
-    color: '#fff',
-  },
-  tabLabel: {
-    fontSize: 11,
-    color: '#555',
-  },
-  tabLabelActive: {
-    color: '#3a6fdf',
-    fontWeight: '600',
-  },
-});
-
-export default HomeScreen;
+  modalButtons: { flexDirection: 'row', gap: 12 },
+  cancelBtn: { flex: 1, borderWidth: 1.5, borderColor: '#ccc', borderRadius: 28, paddingVertical: 14, alignItems: 'center' },
+  cancelBtnText: { fontSize: 16, color: '#555', fontWeight: '500' },
+  confirmBtn: { flex: 1, backgroundColor: '#3d4f3a', borderRadius: 28, paddingVertical: 14, alignItems: 'center' },
+  confirmBtnText: { fontSize: 16, color: '#fff', fontWeight: '600' },
+})
