@@ -23,7 +23,7 @@ const HomeScreen = () => {
 
   const handleLogout = () => {
     signOut();
-    navigation.navigate('Starter');
+    navigation.navigate('Login');
   };
 
   return (

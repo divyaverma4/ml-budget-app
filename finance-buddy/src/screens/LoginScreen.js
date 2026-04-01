@@ -23,7 +23,6 @@ export default function LoginScreen() {
     try {
       const user = await login(email, password)
       signIn(user)
-      navigation.navigate('Home')
       console.log("Login successful")
     } catch (error) {
       Alert.alert('Login Failed', error.message)
@@ -70,22 +69,22 @@ export default function LoginScreen() {
         <Text style={styles.link}>Sign Up</Text>
       </TouchableOpacity>
 
-      <View style={styles.socialRow}>
+      {/* <View style={styles.socialRow}>
          {/* Facebook */}
-        <TouchableOpacity style={styles.socialBtn}>
+        {/* <TouchableOpacity style={styles.socialBtn}>
           <Text style={[styles.socialIcon, { color: '#1877f2' }]}>f</Text>
         </TouchableOpacity>
 
         {/* Google */}
-        <TouchableOpacity style={styles.socialBtn}>
+        {/* <TouchableOpacity style={styles.socialBtn}>
           <Text style={[styles.socialIcon, { color: '#EA4335' }]}>G</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Apple */}
-        <TouchableOpacity style={styles.socialBtn}>
+        {/* <TouchableOpacity style={styles.socialBtn}>
           <Text style={[styles.socialIcon, { color: '#000' }]}></Text>
         </TouchableOpacity>
-      </View>
+      </View> */} 
     </KeyboardAvoidingView>
   )
 }
