@@ -3,9 +3,18 @@ import { View, Text, TouchableOpacity, Modal, StyleSheet, TextInput, Alert} from
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { Picker } from '@react-native-picker/picker'
+
+const TABS = [
+  { name: 'Home', initial: 'H' },
+  { name: 'Expenses', initial: 'E' },
+  { name: 'Budget', initial: 'B' },
+  { name: 'Trends', initial: 'T' },
+]
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState('Home');
   const [modalVisible, setModalVisible] = useState(false);
   const [expenseType, setExpenseType] = useState('');
   const [amount, setAmount] = useState('');
@@ -106,6 +115,25 @@ const HomeScreen = () => {
           <Text>Utilities</Text>
           <Text>Overspent</Text>
         </View>
+      </View>
+
+      {/* Bottom Tab Bar */}
+      <View style={styles.tabBar}>
+        {TABS.map(({ name, initial }) => (
+          <TouchableOpacity
+            key={name}
+            style={styles.tab}
+            onPress={() => {
+              setActiveTab(name)
+              if (name !== 'Home') navigation.navigate(name)
+            }}
+          >
+            <View style={[styles.tabIconWrap, activeTab === name && styles.tabIconWrapActive]}>
+              <Text style={[styles.tabIcon, activeTab === name && styles.tabIconActive]}>{initial}</Text>
+            </View>
+            <Text style={[styles.tabLabel, activeTab === name && styles.tabLabelActive]}>{name}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
@@ -244,6 +272,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 5,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#e8e8e8',
+    paddingVertical: 10,
+    paddingBottom: 16,
+    paddingHorizontal: 8,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 3,
+  },
+  tabIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabIconWrapActive: {
+    backgroundColor: '#3a6fdf',
+  },
+  tabIcon: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#333',
+  },
+  tabIconActive: {
+    color: '#fff',
+  },
+  tabLabel: {
+    fontSize: 11,
+    color: '#555',
+  },
+  tabLabelActive: {
+    color: '#3a6fdf',
+    fontWeight: '600',
   },
 });
 
