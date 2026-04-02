@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet, Modal,
-  ScrollView, TextInput, Alert, StatusBar, KeyboardAvoidingView, Platform,
+  ScrollView, TextInput, Alert, StatusBar, KeyboardAvoidingView, Platform, Animated,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import Svg, { Path, Circle } from 'react-native-svg'
 import { useData, CATEGORIES, getStatus } from '../context/DataContext'
 
@@ -56,11 +56,23 @@ const BUDGET_CATEGORIES = ['Food', 'Transportation', 'Rent', 'Groceries']
 
 export default function BudgetScreen() {
   const navigation = useNavigation()
-  const { spending, totalIncome, totalSavings, budgetPlan, updateBudget, computeBudgetPlan } = useData()
+  const { spending, totalIncome, totalSavings, budgetPlan, saveIncomeSavings, updateBudget, computeBudgetPlan } = useData()
   const [incomeModal, setIncomeModal] = useState(false)
   const [savingsModal, setSavingsModal] = useState(false)
   const [incomeAmount, setIncomeAmount] = useState('')
   const [savingsAmount, setSavingsAmount] = useState('')
+
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(24)).current
+
+  useFocusEffect(useCallback(() => {
+    fadeAnim.setValue(0)
+    slideAnim.setValue(24)
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 380, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 380, useNativeDriver: true }),
+    ]).start()
+  }, []))
 
   async function handleAddIncome() {
     const num = parseFloat(incomeAmount)
@@ -69,7 +81,7 @@ export default function BudgetScreen() {
       return
     }
     try {
-      await updateBudget(totalIncome + num, totalSavings)
+      await saveIncomeSavings(totalIncome + num, totalSavings)
       setIncomeAmount('')
       setIncomeModal(false)
     } catch (error) {
@@ -88,7 +100,7 @@ export default function BudgetScreen() {
       return
     }
     try {
-      await updateBudget(totalIncome, totalSavings + num)
+      await saveIncomeSavings(totalIncome, totalSavings + num)
       setSavingsAmount('')
       setSavingsModal(false)
     } catch (error) {
@@ -122,7 +134,10 @@ export default function BudgetScreen() {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <Animated.ScrollView
+        style={[styles.scroll, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+        contentContainerStyle={styles.scrollContent}
+      >
 
         {/* Add Income */}
         <TouchableOpacity style={styles.card} onPress={() => setIncomeModal(true)} activeOpacity={0.85}>
@@ -143,7 +158,7 @@ export default function BudgetScreen() {
         {/* Income / Savings summary */}
         {totalIncome > 0 && (
           <View style={[styles.card, styles.cardAlt]}>
-            <Text style={styles.cardTitle}>Income Overview</Text>
+            <Text style={styles.cardTitle}>Income Overview:</Text>
             <View style={styles.chartRow}>
               <DonutChart
                 available={available}
@@ -211,7 +226,7 @@ export default function BudgetScreen() {
           })}
         </View>
 
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Add Income Modal */}
       <Modal visible={incomeModal} transparent animationType="slide" onRequestClose={() => setIncomeModal(false)}>
@@ -275,18 +290,18 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#7d9478' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#3d4f3a', paddingHorizontal: 14, paddingVertical: 12,
+    backgroundColor: '#3d4f3a', paddingHorizontal: 16, paddingVertical: 14,
   },
-  headerLeft: { minWidth: 40 },
+  headerLeft: { flex: 1 },
   headerNav: { color: '#fff', fontSize: 16 },
-  headerTitle: { fontSize: 20, fontWeight: '600', color: '#fff', flex: 1, textAlign: 'center' },
-  headerRight: { minWidth: 40 },
+  headerTitle: { fontSize: 20, fontWeight: '600', color: '#fff', textAlign: 'center' },
+  headerRight: { flex: 1 },
   scroll: { flex: 1 },
-  scrollContent: { padding: 16, gap: 14 },
+  scrollContent: { padding: 20, gap: 16, paddingBottom: 100 },
   card: {
-    backgroundColor: '#fff', borderRadius: 18, padding: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+    backgroundColor: '#fff', borderRadius: 18, padding: 22,
+    shadowColor: '#1a2e1a', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.13, shadowRadius: 8, elevation: 5,
   },
   cardAlt: { backgroundColor: '#FFF5E0' },
   cardTitle: { fontSize: 19, fontWeight: '700', color: '#1a1a1a', marginBottom: 12 },

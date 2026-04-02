@@ -64,7 +64,7 @@ export function DataProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [user?.uid])
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
@@ -96,6 +96,17 @@ export function DataProvider({ children }) {
     }
   }
 
+  async function saveIncomeSavings(income, savings) {
+    setTotalIncome(income)
+    setTotalSavings(savings)
+    if (!user) return
+    await setDoc(doc(db, 'budgets', user.uid), {
+      totalIncome: income,
+      totalSavings: savings,
+      budgetPlan,
+    })
+  }
+
   async function updateBudget(income, savings) {
     const plan = computeBudgetPlan(income, savings)
     setTotalIncome(income)
@@ -119,7 +130,7 @@ export function DataProvider({ children }) {
   return (
     <DataContext.Provider value={{
       expenses, spending, totalIncome, totalSavings, budgetPlan,
-      loading, addExpense, updateBudget, computeBudgetPlan, refresh: fetchAll,
+      loading, addExpense, saveIncomeSavings, updateBudget, computeBudgetPlan, refresh: fetchAll,
     }}>
       {children}
     </DataContext.Provider>
