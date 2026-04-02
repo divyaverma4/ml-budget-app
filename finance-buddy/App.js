@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { AuthProvider, useAuth } from './src/context/AuthContext'
 import { DataProvider } from './src/context/DataContext'
-import { View, TouchableOpacity, Text } from 'react-native'
+import { View, TouchableOpacity, Text, Animated } from 'react-native'
 import StarterScreen from './src/screens/StarterScreen'
 import LoginScreen from './src/screens/LoginScreen'
 import SignupScreen from './src/screens/SignupScreen'
@@ -15,6 +15,72 @@ import SpendingTrendsScreen from './src/screens/SpendingTrendsScreen'
 const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
 
+function TabButton({ route, isFocused, options, navigation }) {
+  const label = options.tabBarLabel !== undefined ? options.tabBarLabel : route.name
+  const scaleAnim = new Animated.Value(1)
+
+  const onPressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.91,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 6,
+    }).start()
+  }
+
+  const onPressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 20,
+      bounciness: 8,
+    }).start()
+  }
+
+  const onPress = () => {
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: route.key,
+      canPreventDefault: true,
+    })
+    if (!isFocused && !event.defaultPrevented) {
+      navigation.navigate(route.name)
+    }
+  }
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        activeOpacity={1}
+        style={{
+          backgroundColor: isFocused ? '#fff' : '#d6ebd1',
+          borderRadius: 25,
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          minWidth: 80,
+          alignItems: 'center',
+          shadowColor: '#1a2e1a',
+          shadowOffset: { width: 0, height: isFocused ? 4 : 2 },
+          shadowOpacity: isFocused ? 0.18 : 0.1,
+          shadowRadius: isFocused ? 6 : 3,
+          elevation: isFocused ? 6 : 3,
+        }}
+      >
+        <Text style={{
+          color: isFocused ? '#3d4f3a' : '#5a7a55',
+          fontWeight: isFocused ? '700' : '500',
+          fontSize: 14,
+        }}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  )
+}
+
 function CustomTabBar({ state, descriptors, navigation }) {
   return (
     <View style={{
@@ -22,59 +88,27 @@ function CustomTabBar({ state, descriptors, navigation }) {
       backgroundColor: '#7d9478',
       paddingVertical: 10,
       paddingHorizontal: 20,
+      paddingBottom: 14,
       justifyContent: 'space-around',
       alignItems: 'center',
       borderTopWidth: 0,
-      elevation: 0,
-      shadowOpacity: 0,
+      shadowColor: '#1a2e1a',
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.12,
+      shadowRadius: 6,
+      elevation: 8,
     }}>
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const label = options.tabBarLabel !== undefined ? options.tabBarLabel : route.name;
-        const isFocused = state.index === index;
-
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
-
-        return (
-          <TouchableOpacity
-            key={route.key}
-            onPress={onPress}
-            style={{
-              backgroundColor: isFocused ? '#fff' : '#d6ebd1',
-              borderRadius: 25,
-              paddingVertical: 10,
-              paddingHorizontal: 20,
-              minWidth: 80,
-              alignItems: 'center',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 3,
-              elevation: 3,
-            }}
-          >
-            <Text style={{
-              color: isFocused ? '#7d9478' : '#666',
-              fontWeight: 'bold',
-              fontSize: 14,
-            }}>
-              {label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+      {state.routes.map((route, index) => (
+        <TabButton
+          key={route.key}
+          route={route}
+          isFocused={state.index === index}
+          options={descriptors[route.key].options}
+          navigation={navigation}
+        />
+      ))}
     </View>
-  );
+  )
 }
 
 function TabNavigator() {

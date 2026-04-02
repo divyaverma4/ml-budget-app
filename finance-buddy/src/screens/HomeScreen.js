@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 
 import {
   View, Text, TouchableOpacity, StyleSheet, Modal,
-  ScrollView, TextInput, Alert, StatusBar, KeyboardAvoidingView, Platform,
+  ScrollView, TextInput, Alert, StatusBar, KeyboardAvoidingView, Platform, Animated,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import { useAuth } from '../context/AuthContext'
 import { useData, CATEGORIES, getStatus } from '../context/DataContext'
 import { logout } from '../services/authService'
@@ -21,6 +21,18 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [amount, setAmount] = useState('')
+
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(24)).current
+
+  useFocusEffect(useCallback(() => {
+    fadeAnim.setValue(0)
+    slideAnim.setValue(24)
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 380, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 380, useNativeDriver: true }),
+    ]).start()
+  }, []))
 
   async function handleLogout() {
     try {
@@ -80,13 +92,16 @@ export default function HomeScreen() {
         <Text style={styles.headerTitle}>Home</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutText}>⊕ Logout</Text>
+            <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
           <Text style={styles.headerGear}>⚙</Text>
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <Animated.ScrollView
+        style={[styles.scroll, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+        contentContainerStyle={styles.scrollContent}
+      >
 
         {/* Add Expense Card */}
         <TouchableOpacity style={styles.card} onPress={() => setModalVisible(true)} activeOpacity={0.85}>
@@ -142,7 +157,7 @@ export default function HomeScreen() {
           })}
         </View>
 
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Add Expense Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={closeModal}>
@@ -190,21 +205,21 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#7d9478' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#3d4f3a', paddingHorizontal: 14, paddingVertical: 12,
+    backgroundColor: '#3d4f3a', paddingHorizontal: 16, paddingVertical: 14,
   },
-  headerLeft: { minWidth: 40 },
+  headerLeft: { flex: 1 },
   headerNav: { color: '#fff', fontSize: 16 },
-  headerTitle: { fontSize: 20, fontWeight: '600', color: '#fff', flex: 1, textAlign: 'center' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8, minWidth: 80, justifyContent: 'flex-end' },
+  headerTitle: { fontSize: 20, fontWeight: '600', color: '#fff', textAlign: 'center' },
+  headerRight: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'flex-end' },
   logoutBtn: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 },
   logoutText: { color: '#fff', fontSize: 13, fontWeight: '500' },
   headerGear: { color: '#fff', fontSize: 18 },
   scroll: { flex: 1 },
-  scrollContent: { padding: 16, gap: 14 },
+  scrollContent: { padding: 20, gap: 16, paddingBottom: 100 },
   card: {
-    backgroundColor: '#fff', borderRadius: 18, padding: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+    backgroundColor: '#fff', borderRadius: 18, padding: 22,
+    shadowColor: '#1a2e1a', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.13, shadowRadius: 8, elevation: 5,
   },
   cardAlt: { backgroundColor: '#FFF5E0' },
   cardTitle: { fontSize: 19, fontWeight: '700', color: '#1a1a1a', marginBottom: 12 },
