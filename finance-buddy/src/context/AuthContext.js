@@ -5,6 +5,13 @@ import { auth } from '../firebase'
 
 const AuthContext = createContext(null)
 
+function normalizeAuthUser(userData) {
+  if (!userData) return null
+  if (userData.uid) return userData
+  if (userData.user?.uid) return userData.user
+  return null
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -25,7 +32,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   function signIn(userData) {
-    setUser(userData)
+    setUser(normalizeAuthUser(userData))
   }
 
   function signOut() {
