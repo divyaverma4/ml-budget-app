@@ -7,6 +7,9 @@ import {
 import { useAuth } from './AuthContext'
 import { db } from '../firebase'
 import { auth } from '../firebase'
+import { getAuth } from 'firebase/auth'
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000'
 
 const DataContext = createContext(null)
 
@@ -15,7 +18,7 @@ export const CATEGORIES = ['Food', 'Transportation', 'Rent', 'Groceries']
 export const DEFAULT_BUDGETS = {
   Food: 300,
   Transportation: 150,
-  Rent: 375,
+  Rent: 1200,
   Groceries: 200,
 }
 
@@ -69,20 +72,37 @@ export function DataProvider({ children }) {
       const weekStart = getWeekStart()
 
       const q = query(
-        collection(db, 'expenses'),
-        where('userId', '==', user.uid),
-        where('date', '>=', Timestamp.fromDate(weekStart))
+        collection(db, 'variable_expenses'),
+        where('uid', '==', user.uid),
+        where('timestamp', '>=', Timestamp.fromDate(weekStart))
       )
 
       const snapshot = await getDocs(q)
       setExpenses(snapshot.docs.map(d => d.data()))
+      // Read income from users/{uid}
+      const userSnap = await getDoc(doc(db, 'users', user.uid))
+        if (userSnap.exists()) {
+        const userData = userSnap.data()
+        const income = userData.monthly_income || 0
+        const rate = userData.savings_rate || 0
+        setTotalIncome(income)
+        setTotalSavings(Math.round(income * rate))
+        }
 
+// Read budget plan from budgets/{uid}
       const budgetSnap = await getDoc(doc(db, 'budgets', user.uid))
       if (budgetSnap.exists()) {
-        const data = budgetSnap.data()
-        setTotalIncome(data.totalIncome || 0)
-        setTotalSavings(data.totalSavings || 0)
-        setBudgetPlan(data.budgetPlan || DEFAULT_BUDGETS)
+          const data = budgetSnap.data()
+          const needs = data.needs || 0
+          const wants = data.wants || 0
+          if (needs > 0 || wants > 0) {
+              setBudgetPlan({
+                  Rent: Math.round(needs * 0.65),
+                  Groceries: Math.round(needs * 0.35),
+                  Food: Math.round(wants * 0.60),
+                  Transportation: Math.round(wants * 0.40),
+              })
+          }
       }
     } catch (err) {
       console.error('DataContext fetch error:', err)
@@ -110,14 +130,14 @@ export function DataProvider({ children }) {
     const uid = getCurrentUid()
 
     const payload = {
-      userId: uid,
+      uid: uid,
       category,
       amount,
-      date: serverTimestamp(),
+      timestamp: serverTimestamp(),
       createdAt: serverTimestamp(),
     }
 
-    await addDoc(collection(db, "expenses"), payload)
+    await addDoc(collection(db, "variable_expenses"), payload)
     await fetchAll()
   }
 
@@ -131,29 +151,47 @@ export function DataProvider({ children }) {
   }
 
   async function saveIncomeSavings(income, savings) {
-    const uid = getCurrentUid()
-    await setDoc(doc(db, 'budgets', uid), {
-      totalIncome: Number(income || 0),
-      totalSavings: Number(savings || 0),
-      updatedAt: serverTimestamp(),
+    setTotalIncome(income)
+    setTotalSavings(savings)
+    if (!user) return
+    const savingsRate = income > 0 ? savings / income : 0
+    await setDoc(doc(db, 'users', user.uid), {
+      monthly_income: income,
+      savings_rate: Math.round(savingsRate * 10000) / 10000,
     }, { merge: true })
-    await fetchAll()
   }
 
-  async function updateBudget(income, savings) {
-    const safeIncome = Number(income || 0)
-    const safeSavings = Number(savings || 0)
+async function updateBudget() {
     const uid = getCurrentUid()
-    const nextPlan = computeBudgetPlan(safeIncome, safeSavings)
-
-    await setDoc(doc(db, 'budgets', uid), {
-      totalIncome: safeIncome,
-      totalSavings: safeSavings,
-      budgetPlan: nextPlan,
-      updatedAt: serverTimestamp(),
-    }, { merge: true })
-
-    await fetchAll()
+    if (!uid) return
+    try {
+      const token = await getAuth().currentUser.getIdToken()
+      const res = await fetch(`${API_URL}/api/budget/optimize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      if (!res.ok) throw new Error('Optimize failed')
+      const data = await res.json()
+      const needs = data.needs || 0
+      const wants = data.wants || 0
+      const plan = {
+        Rent: Math.round(needs * 0.65),
+        Groceries: Math.round(needs * 0.35),
+        Food: Math.round(wants * 0.60),
+        Transportation: Math.round(wants * 0.40),
+      }
+      setBudgetPlan(plan)
+      return plan
+    } catch (error) {
+      console.warn('Backend unavailable, using fallback')
+      const plan = computeBudgetPlan(totalIncome, totalSavings)
+      setBudgetPlan(plan)
+      await fetchAll()
+      return plan
+    }
   }
 
 
