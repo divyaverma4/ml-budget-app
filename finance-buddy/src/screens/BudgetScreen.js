@@ -212,27 +212,25 @@ export default function BudgetScreen() {
           <Text style={styles.optimizeBtnText}>Optimize my budget</Text>
         </TouchableOpacity>
 
-        {/* Budget Plan with spend progress */}
+        {/* Proposed Budget Plan */}
         <View style={[styles.card, styles.cardAlt]}>
-          <Text style={styles.cardTitle}>Budget Plan:</Text>
-          {BUDGET_CATEGORIES.map(cat => {
+          <Text style={styles.cardTitle}>Proposed Budget Plan:</Text>
+          <Text style={styles.planSubtitle}>Suggested weekly allocation based on your income</Text>
+          {BUDGET_CATEGORIES.map((cat, i) => {
             const budget = budgetPlan[cat] || 0
-            const spent = spending[cat] || 0
-            const { label, color } = getStatus(spent, budget)
-            const progress = budget > 0 ? Math.min(spent / budget, 1) : 0
+            const pct = available > 0 ? Math.round((budget / available) * 100) : 0
+            const ACCENT_COLORS = ['#8B6914', '#5C7A4E', '#C4956A', '#7A9E7E']
+            const accent = ACCENT_COLORS[i]
             return (
-              <View key={cat} style={styles.budgetItem}>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryCategory}>{cat}</Text>
-                  <Text style={styles.summaryAmount}>${budget}</Text>
+              <View key={cat} style={styles.proposedItem}>
+                <View style={[styles.proposedAccent, { backgroundColor: accent }]} />
+                <Text style={styles.proposedCategory}>{cat}</Text>
+                <View style={styles.proposedRight}>
+                  <Text style={styles.proposedAmount}>${budget}</Text>
+                  <View style={[styles.proposedPill, { backgroundColor: accent + '28' }]}>
+                    <Text style={[styles.proposedPct, { color: accent }]}>{pct}%</Text>
+                  </View>
                 </View>
-                <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: color }]} />
-                </View>
-                <Text style={styles.spentLabel}>
-                  Spent: ${spent.toFixed(0)}
-                  {budget > 0 ? <Text style={{ color }}> — {label}</Text> : null}
-                </Text>
               </View>
             )
           })}
@@ -336,10 +334,17 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
   optimizeBtnText: { fontSize: 16, fontWeight: '500', color: '#1a1a1a' },
-  budgetItem: { marginBottom: 14 },
-  progressTrack: { height: 6, backgroundColor: '#eee', borderRadius: 3, overflow: 'hidden', marginBottom: 3 },
-  progressFill: { height: 6, borderRadius: 3 },
-  spentLabel: { fontSize: 12, color: '#888' },
+  planSubtitle: { fontSize: 13, color: '#888', marginBottom: 16, marginTop: -6 },
+  proposedItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#e8ddd0',
+  },
+  proposedAccent: { width: 4, height: 36, borderRadius: 2 },
+  proposedCategory: { flex: 1, fontSize: 16, fontWeight: '500', color: '#1a1a1a' },
+  proposedRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  proposedAmount: { fontSize: 17, fontWeight: '700', color: '#1a1a1a' },
+  proposedPill: { borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 },
+  proposedPct: { fontSize: 12, fontWeight: '600' },
   modalOverlay: { flex: 1, justifyContent: 'flex-end' },
   modalBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.4)' },
   modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 36 },
