@@ -114,6 +114,11 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
       >
 
+        {/* Welcome */}
+        {user?.email && (
+          <Text style={styles.welcomeText}>Hi, {user.email}! Welcome back!</Text>
+        )}
+
         {/* Add Expense Card */}
         <TouchableOpacity style={styles.card} onPress={() => setModalVisible(true)} activeOpacity={0.85}>
           <View style={styles.addExpenseRow}>
@@ -134,14 +139,17 @@ export default function HomeScreen() {
                 : 'You\'re on track with all categories this week!'}
             </Text>
           ) : (
-            insights.map(({ cat, spent, budget, label, color }) => (
-              <View key={cat} style={styles.insightRow}>
-                <Text style={styles.insightCat}>{cat}</Text>
-                <Text style={[styles.insightLabel, { color }]}>
-                  ${spent.toFixed(0)} / ${budget} — {label}
-                </Text>
-              </View>
-            ))
+            insights.map(({ cat, label, color }) => {
+              const message = label === 'Overspent'
+                ? `You have overspent on ${cat}. Consider spending less in this category!`
+                : `You're close to your ${cat} limit. Be careful with your spending!`
+              return (
+                <View key={cat} style={styles.insightRow}>
+                  <View style={[styles.insightDot, { backgroundColor: color }]} />
+                  <Text style={[styles.insightMessage, { color }]}>{message}</Text>
+                </View>
+              )
+            })
           )}
         </View>
 
@@ -238,10 +246,11 @@ const styles = StyleSheet.create({
   addIcon: { width: 36, height: 36, borderRadius: 8, borderWidth: 2, borderColor: '#1a1a1a', alignItems: 'center', justifyContent: 'center' },
   addIconText: { fontSize: 22, fontWeight: '300', color: '#1a1a1a', lineHeight: 26 },
   addExpenseLabel: { fontSize: 18, fontWeight: '500', color: '#1a1a1a' },
+  welcomeText: { fontSize: 16, fontWeight: '600', color: '#fff', textAlign: 'center', marginBottom: 4 },
   insightDefault: { fontSize: 15, color: '#555' },
-  insightRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  insightCat: { fontSize: 15, fontWeight: '500', color: '#1a1a1a' },
-  insightLabel: { fontSize: 14, fontWeight: '500' },
+  insightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 10 },
+  insightDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5 },
+  insightMessage: { flex: 1, fontSize: 14, fontWeight: '500', lineHeight: 20 },
   summaryItem: { marginBottom: 12 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   summaryCategory: { fontSize: 16, color: '#1a1a1a' },

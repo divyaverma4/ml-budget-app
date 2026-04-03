@@ -6,7 +6,7 @@ import Svg, { Path, Circle } from 'react-native-svg'
 import { useData } from '../context/DataContext'
 
 const CX = 90, CY = 90, R = 75, INNER_R = 46
-const NEUTRAL_COLORS = ['#3a3a3a', '#777777', '#555555', '#aaaaaa']
+const NEUTRAL_COLORS = ['#8B6914', '#5C7A4E', '#C4956A', '#7A9E7E']
 const CATEGORIES_ORDER = ['Food', 'Transportation', 'Rent', 'Groceries']
 
 function polarToXY(cx, cy, r, angleDeg) {
@@ -71,7 +71,7 @@ export default function SpendingTrendsScreen() {
 
   const totalExpenses = Object.values(spending).reduce((sum, v) => sum + v, 0)
   const balance = totalIncome - totalSavings - totalExpenses
-  const cardBg = '#FFF5E0'
+  const cardBg = '#f5ebe0'
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -91,27 +91,29 @@ export default function SpendingTrendsScreen() {
 
         {/* 2x2 Summary Grid */}
         <View style={styles.summaryGrid}>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: '#e8f0e8' }]}>
             <Text style={styles.summaryAmount}>${totalIncome.toLocaleString()}</Text>
             <Text style={styles.summaryLabel}>Income</Text>
           </View>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: '#FFF5E0' }]}>
             <Text style={styles.summaryAmount}>${totalSavings.toLocaleString()}</Text>
             <Text style={styles.summaryLabel}>Savings</Text>
           </View>
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: '#f5ebe0' }]}>
             <Text style={styles.summaryAmount}>${totalExpenses.toLocaleString()}</Text>
             <Text style={styles.summaryLabel}>Expenses</Text>
           </View>
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryAmount}>${Math.max(0, balance).toLocaleString()}</Text>
+          <View style={[styles.summaryCard, balance < 0 ? { backgroundColor: '#fde8e8' } : { backgroundColor: '#e8ede8' }]}>
+            <Text style={[styles.summaryAmount, balance < 0 && { color: '#c0392b' }]}>
+              {balance < 0 ? `-$${Math.abs(balance).toLocaleString()}` : `$${balance.toLocaleString()}`}
+            </Text>
             <Text style={styles.summaryLabel}>Balance</Text>
           </View>
         </View>
 
         {/* Total Expenses Breakdown Card */}
-        <View style={[styles.card, styles.cardAlt]}>
-          <Text style={styles.cardTitle}>Total Expenses</Text>
+        <View style={[styles.card, { backgroundColor: '#f5ebe0' }]}>
+          <Text style={[styles.cardTitle, { textAlign: 'center' }]}>Total Expenses</Text>
 
           <View style={styles.chartContainer}>
             <ExpensePieChart spending={spending} total={totalExpenses} cardBg={cardBg} />
@@ -126,7 +128,7 @@ export default function SpendingTrendsScreen() {
                 <View key={cat} style={styles.tableRow}>
                   <View style={[styles.tableColorDot, { backgroundColor: NEUTRAL_COLORS[i] }]} />
                   <Text style={styles.tableCategory}>{cat}</Text>
-                  <Text style={styles.tableAmount}>{amt}</Text>
+                  <Text style={styles.tableAmount}>${amt.toFixed(0)}</Text>
                   <Text style={styles.tablePct}>{pct}%</Text>
                 </View>
               )

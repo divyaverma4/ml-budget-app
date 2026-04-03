@@ -18,9 +18,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Auth with persistence
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
+let auth
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  })
+} catch (e) {
+  // Already initialized (hot reload) — grab the existing instance
+  const { getAuth } = require('firebase/auth')
+  auth = getAuth(app)
+}
+export { auth }
 
 // Firestore
 export const db = getFirestore(app);

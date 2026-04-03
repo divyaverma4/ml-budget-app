@@ -28,7 +28,10 @@ export function AuthProvider({ children }) {
       setLoading(false)
     })
 
-    return unsubscribe
+    // Safety net: if Firebase never responds, unblock the app after 5s
+    const timeout = setTimeout(() => setLoading(false), 5000)
+
+    return () => { unsubscribe(); clearTimeout(timeout) }
   }, [])
 
   function signIn(userData) {

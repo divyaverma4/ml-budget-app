@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { AuthProvider, useAuth } from './src/context/AuthContext'
 import { DataProvider } from './src/context/DataContext'
-import { View, TouchableOpacity, Text, Animated } from 'react-native'
+import { View, TouchableOpacity, Text, Animated, ActivityIndicator, StyleSheet } from 'react-native'
 import StarterScreen from './src/screens/StarterScreen'
 import LoginScreen from './src/screens/LoginScreen'
 import SignupScreen from './src/screens/SignupScreen'
@@ -148,7 +148,12 @@ function AppContent() {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return null 
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#3d4f3a" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    )
   }
 
   return (
@@ -165,6 +170,11 @@ function AppContent() {
     </NavigationContainer>
   )
 }
+
+const styles = StyleSheet.create({
+  loadingScreen: { flex: 1, backgroundColor: '#7d9478', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  loadingText: { color: '#fff', fontSize: 16, fontWeight: '500' },
+})
 
 export default function App() {
   return (
