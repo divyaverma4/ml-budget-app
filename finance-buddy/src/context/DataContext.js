@@ -19,6 +19,13 @@ export const DEFAULT_BUDGETS = {
   Groceries: 200,
 }
 
+const CATEGORY_WEIGHTS = {
+  Food: 0.30,
+  Transportation: 0.15,
+  Rent: 0.35,
+  Groceries: 0.20,
+}
+
 function getWeekStart() {
   const now = new Date()
   const day = now.getDay()
@@ -88,19 +95,19 @@ export function DataProvider({ children }) {
     fetchAll()
   }, [fetchAll])
 
-  async function addExpense(category, amount) {
-    // 1. Prefer AuthContext user
+  function getCurrentUid() {
     let uid = user?.uid
-
-    // 2. Fallback to Firebase Auth instance
     if (!uid) {
       uid = auth.currentUser?.uid
     }
-
-    // 3. If still missing, block the write
     if (!uid) {
-      throw new Error("User not ready in DataContext")
+      throw new Error('User not ready in DataContext')
     }
+    return uid
+  }
+
+  async function addExpense(category, amount) {
+    const uid = getCurrentUid()
 
     const payload = {
       userId: uid,
@@ -111,6 +118,41 @@ export function DataProvider({ children }) {
     }
 
     await addDoc(collection(db, "expenses"), payload)
+    await fetchAll()
+  }
+
+  function computeBudgetPlan(income, savings) {
+    const spendable = Math.max(0, Number(income || 0) - Number(savings || 0))
+    return CATEGORIES.reduce((acc, category) => {
+      const weight = CATEGORY_WEIGHTS[category] || 0
+      acc[category] = Math.round(spendable * weight)
+      return acc
+    }, {})
+  }
+
+  async function saveIncomeSavings(income, savings) {
+    const uid = getCurrentUid()
+    await setDoc(doc(db, 'budgets', uid), {
+      totalIncome: Number(income || 0),
+      totalSavings: Number(savings || 0),
+      updatedAt: serverTimestamp(),
+    }, { merge: true })
+    await fetchAll()
+  }
+
+  async function updateBudget(income, savings) {
+    const safeIncome = Number(income || 0)
+    const safeSavings = Number(savings || 0)
+    const uid = getCurrentUid()
+    const nextPlan = computeBudgetPlan(safeIncome, safeSavings)
+
+    await setDoc(doc(db, 'budgets', uid), {
+      totalIncome: safeIncome,
+      totalSavings: safeSavings,
+      budgetPlan: nextPlan,
+      updatedAt: serverTimestamp(),
+    }, { merge: true })
+
     await fetchAll()
   }
 
@@ -129,6 +171,9 @@ export function DataProvider({ children }) {
       budgetPlan,
       loading,
       addExpense,
+      saveIncomeSavings,
+      updateBudget,
+      computeBudgetPlan,
       refresh: fetchAll,
     }}>
       {children}

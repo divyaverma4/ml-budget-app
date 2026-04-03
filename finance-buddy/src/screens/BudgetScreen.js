@@ -6,7 +6,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import Svg, { Path, Circle } from 'react-native-svg'
-import { useData, CATEGORIES, getStatus } from '../context/DataContext'
+import { useAuth } from '../context/AuthContext'
+import { useData, getStatus } from '../context/DataContext'
 
 const CX = 80, CY = 80, R = 64, INNER_R = 40
 
@@ -56,7 +57,8 @@ const BUDGET_CATEGORIES = ['Food', 'Transportation', 'Rent', 'Groceries']
 
 export default function BudgetScreen() {
   const navigation = useNavigation()
-  const { spending, totalIncome, totalSavings, budgetPlan, saveIncomeSavings, updateBudget, computeBudgetPlan } = useData()
+  const { user } = useAuth()
+  const { spending, totalIncome, totalSavings, budgetPlan, saveIncomeSavings, updateBudget } = useData()
   const [incomeModal, setIncomeModal] = useState(false)
   const [savingsModal, setSavingsModal] = useState(false)
   const [incomeAmount, setIncomeAmount] = useState('')
@@ -75,6 +77,11 @@ export default function BudgetScreen() {
   }, []))
 
   async function handleAddIncome() {
+    if (!user?.uid) {
+      Alert.alert('Please wait', 'Your account is still loading. Try again in a moment.')
+      return
+    }
+
     const num = parseFloat(incomeAmount)
     if (!incomeAmount || isNaN(num) || num <= 0) {
       Alert.alert('Error', 'Please enter a valid amount')
@@ -90,6 +97,11 @@ export default function BudgetScreen() {
   }
 
   async function handleAddSavings() {
+    if (!user?.uid) {
+      Alert.alert('Please wait', 'Your account is still loading. Try again in a moment.')
+      return
+    }
+
     const num = parseFloat(savingsAmount)
     if (!savingsAmount || isNaN(num) || num <= 0) {
       Alert.alert('Error', 'Please enter a valid amount')
