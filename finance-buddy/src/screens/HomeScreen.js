@@ -1,8 +1,9 @@
+// finance-buddy/src/screens/HomeScreen.js
 import { useState, useRef, useCallback } from 'react'
-
 import {
   View, Text, TouchableOpacity, StyleSheet, Modal,
-  ScrollView, TextInput, Alert, StatusBar, KeyboardAvoidingView, Platform, Animated,
+  ScrollView, TextInput, Alert, StatusBar, KeyboardAvoidingView,
+  Platform, Animated
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
@@ -10,14 +11,13 @@ import { useAuth } from '../context/AuthContext'
 import { useData, CATEGORIES, getStatus } from '../context/DataContext'
 import { logout } from '../services/authService'
 
-
-
 const SUMMARY_CATEGORIES = ['Food', 'Transportation', 'Rent', 'Groceries']
 
 export default function HomeScreen() {
   const navigation = useNavigation()
-  const { signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const { spending, budgetPlan, addExpense } = useData()
+
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [amount, setAmount] = useState('')
@@ -44,15 +44,27 @@ export default function HomeScreen() {
   }
 
   async function handleAddExpense() {
+  if (!user?.uid) {
+    Alert.alert("Please wait", "Your account is still loading. Try again in a moment.")
+    return
+  }
+
+    if (!user) {
+      Alert.alert('Error', 'User not ready yet. Please try again.')
+      return
+    }
+
     if (!selectedCategory) {
       Alert.alert('Error', 'Please select a category')
       return
     }
+
     const num = parseFloat(amount)
     if (!amount || isNaN(num) || num <= 0) {
       Alert.alert('Error', 'Please enter a valid amount')
       return
     }
+
     try {
       await addExpense(selectedCategory, num)
       setModalVisible(false)
@@ -70,7 +82,6 @@ export default function HomeScreen() {
     setAmount('')
   }
 
-  // Generate insights: categories over 85% of budget
   const insights = SUMMARY_CATEGORIES
     .map(cat => {
       const spent = spending[cat] || 0
@@ -113,7 +124,7 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* This Week's Insight Card */}
+        {/* Insight Card */}
         <View style={[styles.card, styles.cardAlt]}>
           <Text style={styles.cardTitle}>This Week's Insight:</Text>
           {insights.length === 0 ? (
@@ -134,7 +145,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Budget Summary Card */}
+        {/* Budget Summary */}
         <View style={[styles.card, styles.cardAlt]}>
           <Text style={styles.cardTitle}>Budget Summary:</Text>
           {SUMMARY_CATEGORIES.map(cat => {

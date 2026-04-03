@@ -10,7 +10,7 @@ const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000'
 export async function login(email, password) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password)
-    return { user: userCredential.user }  
+    return userCredential.user
   } catch (error) {
     throw new Error('Login failed')
   }
@@ -19,7 +19,7 @@ export async function login(email, password) {
 export async function signup(email, password) {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-    return { user: userCredential.user }  
+    return userCredential.user
   } catch (error) {
     throw new Error('Signup failed')
   }

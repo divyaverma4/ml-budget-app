@@ -1,8 +1,16 @@
+// finance-buddy/src/context/AuthContext.js
 import { createContext, useContext, useState, useEffect } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase'
 
 const AuthContext = createContext(null)
+
+function normalizeAuthUser(userData) {
+  if (!userData) return null
+  if (userData.uid) return userData
+  if (userData.user?.uid) return userData.user
+  return null
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -19,11 +27,12 @@ export function AuthProvider({ children }) {
       setUser(currentUser)
       setLoading(false)
     })
+
     return unsubscribe
   }, [])
 
   function signIn(userData) {
-    setUser(userData)
+    setUser(normalizeAuthUser(userData))
   }
 
   function signOut() {
