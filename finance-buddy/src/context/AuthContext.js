@@ -1,3 +1,4 @@
+// finance-buddy/src/context/AuthContext.js
 import { createContext, useContext, useState, useEffect } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase'
@@ -19,6 +20,7 @@ export function AuthProvider({ children }) {
       setUser(currentUser)
       setLoading(false)
     })
+
     return unsubscribe
   }, [])
 
