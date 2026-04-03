@@ -1,9 +1,5 @@
 """
 User Profile Routes
-====================
-Firestore doc: users/{uid}
-Actual fields: monthly_income, savings_rate, debt_to_income,
-               emergency_fund, email, name, risk_score
 """
 
 from flask import Blueprint, request, jsonify, g
